@@ -8,6 +8,7 @@ pub struct Chunk {
 
 pub enum OpCode {
     Constant(u8),
+    LongConstant(u32),
     Return,
 }
 
@@ -32,7 +33,11 @@ impl Chunk {
 
     pub fn write_constant(&mut self, value: Value, line: usize) {
         let index = self.add_constant(value);
-        self.write(OpCode::Constant(index as u8), line);
+        if index < 256 {
+            self.write(OpCode::Constant(index as u8), line);
+        } else {
+            self.write(OpCode::LongConstant(index as u32), line);
+        }
     }
 
     pub fn disassemble(&self, name: &str) {
@@ -54,7 +59,7 @@ impl Chunk {
 
         let instruction = &self.code[offset];
         match instruction {
-            Constant(_) => self.constant_instruction(instruction),
+            Constant(_) | LongConstant(_) => self.constant_instruction(instruction),
             Return => Self::simple_instruction(instruction),
         }
     }
@@ -66,6 +71,7 @@ impl Chunk {
     fn constant_instruction(&self, instruction: &OpCode) {
         let index = match instruction {
             OpCode::Constant(index) => (*index) as usize,
+            OpCode::LongConstant(index) => (*index) as usize,
             _ => unreachable!(),
         };
 
@@ -79,6 +85,7 @@ impl OpCode {
         use OpCode::*;
         match self {
             Constant(_) => "OP_CONSTANT",
+            LongConstant(_) => "OP_CONSTANT_LONG",
             Return => "OP_RETURN",
         }
     }
