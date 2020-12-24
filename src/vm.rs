@@ -17,6 +17,16 @@ pub enum InterpretResult {
     RuntimeError,
 }
 
+macro_rules! arithmetic_op {
+    ($self:ident, $op:tt) => {
+        {
+        let b = $self.pop();
+        let a = $self.pop();
+        $self.push(a $op b);
+        }
+    }
+}
+
 impl VM {
     pub fn new() -> Self {
         let chunk = Chunk::new();
@@ -53,6 +63,15 @@ impl VM {
                 LongConstant(index) => {
                     let constant = self.get_constant(index as usize);
                     self.push(constant);
+                }
+                Add => arithmetic_op!(self, +),
+                Subtract => arithmetic_op!(self, -),
+                Multiply => arithmetic_op!(self, *),
+                Divide => arithmetic_op!(self, /),
+                Modulo => arithmetic_op!(self, %),
+                Negate => {
+                    let value = -self.pop();
+                    self.push(value);
                 }
                 Return => {
                     println!("{}", self.pop());

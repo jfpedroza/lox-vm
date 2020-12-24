@@ -10,6 +10,12 @@ pub struct Chunk {
 pub enum OpCode {
     Constant(u8),
     LongConstant(u32),
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Modulo,
+    Negate,
     Return,
 }
 
@@ -96,7 +102,9 @@ impl Chunk {
         let instruction = &self.code[offset];
         match instruction {
             Constant(_) | LongConstant(_) => self.constant_instruction(instruction),
-            Return => Self::simple_instruction(instruction),
+            Add | Subtract | Multiply | Divide | Modulo | Negate | Return => {
+                Self::simple_instruction(instruction)
+            }
         }
     }
 
@@ -122,6 +130,12 @@ impl OpCode {
         match self {
             Constant(_) => "OP_CONSTANT",
             LongConstant(_) => "OP_CONSTANT_LONG",
+            Add => "OP_ADD",
+            Subtract => "OP_SUBTRACT",
+            Multiply => "OP_MULTIPLY",
+            Divide => "OP_DIVIDE",
+            Modulo => "OP_MODULO",
+            Negate => "OP_NEGATE",
             Return => "OP_RETURN",
         }
     }
