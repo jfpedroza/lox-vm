@@ -11,11 +11,10 @@ pub struct VM {
     stack: Vec<Value>,
 }
 
-pub enum InterpretResult {
-    Ok,
-    CompileError,
-    RuntimeError,
-}
+#[derive(Debug, PartialEq, Fail)]
+pub struct RuntimeError;
+
+type InterpretResult = Result<(), RuntimeError>;
 
 macro_rules! arithmetic_op {
     ($self:ident, $op:tt) => {
@@ -75,7 +74,7 @@ impl VM {
                 }
                 Return => {
                     println!("{}", self.pop());
-                    return InterpretResult::Ok;
+                    return Ok(());
                 }
             }
         }

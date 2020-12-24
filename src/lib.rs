@@ -1,28 +1,89 @@
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
+
 mod chunk;
+pub mod error;
 mod value;
 mod vm;
 
-use chunk::{Chunk, OpCode};
+use ansi_term::Color::{Blue, Cyan};
+use error::print_err;
+use failure::{Fallible, ResultExt};
+use rustyline::{config::Configurer, error::ReadlineError, Editor};
+use std::ffi::OsStr;
+use std::io::{stdin, Read};
+use std::path::Path;
+use value::Value;
 use vm::VM;
 
-pub fn run() {
-    let mut vm = VM::new();
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-    let mut chunk = Chunk::new();
-    chunk.write_constant(1.2, 123);
-    chunk.write_constant(3.4, 123);
+pub struct Lox {
+    vm: VM,
+}
 
-    chunk.write(OpCode::Add, 123);
+impl Lox {
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
+        Lox { vm: VM::new() }
+    }
 
-    chunk.write_constant(5.6, 123);
+    pub fn run(&mut self, input: &str) -> Fallible<()> {
+        println!("Input: {}", input);
+        Ok(())
+    }
 
-    chunk.write(OpCode::Divide, 123);
-    chunk.write(OpCode::Negate, 123);
+    pub fn run_file(&mut self, path: &OsStr) -> Fallible<()> {
+        let content = if path == "-" {
+            let mut content = String::new();
+            stdin()
+                .lock()
+                .read_to_string(&mut content)
+                .context("Could not read from stdin")?;
+            content
+        } else {
+            let path = Path::new(path);
+            let context = format!("Could not read '{}'", path.display());
+            std::fs::read_to_string(path).context(context)?
+        };
 
-    chunk.write(OpCode::Return, 123);
+        self.run(&content)
+    }
 
-    chunk.disassemble("test chunk");
-    println!();
+    pub fn run_prompt(&mut self) -> Fallible<()> {
+        let mut rl = Editor::<()>::new();
+        rl.set_auto_add_history(true);
 
-    vm.interpret(chunk);
+        println!("Lox {}", VERSION);
+        println!("Press Ctrl+D to exit\n");
+
+        let prompt = format!("{}> ", Blue.bold().paint("lox"));
+
+        loop {
+            match rl.readline(&prompt) {
+                Ok(line) if line.is_empty() => (),
+                Ok(line) => match self.run_prompt_line(&line) {
+                    Ok(()) => (),
+                    Err(err) => print_err(&err),
+                },
+                Err(ReadlineError::Interrupted) => (),
+                Err(ReadlineError::Eof) => break,
+                Err(err) => return Err(err.into()),
+            }
+        }
+
+        Ok(())
+    }
+
+    fn run_prompt_line(&mut self, _input: &str) -> Fallible<()> {
+        print_value(&3.5);
+        Ok(())
+    }
+}
+
+fn print_value(val: &Value) {
+    let output = Cyan.paint(val.to_string());
+
+    print!("{}", output);
 }
