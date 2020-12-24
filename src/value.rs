@@ -1,9 +1,12 @@
-use std::fmt::{Display, Formatter, Result as FmtResult};
+// use std::fmt::{Display, Formatter, Result as FmtResult};
 
-pub struct Value(pub f64);
+// #[derive(Clone)]
+// pub struct Value(pub f64);
 
-impl Display for Value {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "{}", self.0)
-    }
-}
+// impl Display for Value {
+//     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+//         write!(f, "{}", self.0)
+//     }
+// }
+
+pub type Value = f64;

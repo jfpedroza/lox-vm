@@ -1,14 +1,21 @@
 use crate::value::Value;
 
 pub struct Chunk {
-    code: Vec<OpCode>,
+    pub code: Vec<OpCode>,
     lines: Vec<usize>,
-    constants: Vec<Value>,
+    pub constants: Vec<Value>,
 }
 
+#[derive(Copy, Clone)]
 pub enum OpCode {
     Constant(u8),
     LongConstant(u32),
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Modulo,
+    Negate,
     Return,
 }
 
@@ -51,6 +58,8 @@ impl Chunk {
     }
 
     fn get_line(&self, offset: usize) -> usize {
+        assert!(self.lines.len() % 2 == 0);
+
         let mut rem = offset + 1;
         let mut iter = self.lines.chunks_exact(2);
         let mut current_line;
@@ -79,7 +88,7 @@ impl Chunk {
         }
     }
 
-    fn disassemble_instruction(&self, offset: usize) {
+    pub fn disassemble_instruction(&self, offset: usize) {
         use OpCode::*;
         print!("{:04} ", offset);
 
@@ -93,7 +102,9 @@ impl Chunk {
         let instruction = &self.code[offset];
         match instruction {
             Constant(_) | LongConstant(_) => self.constant_instruction(instruction),
-            Return => Self::simple_instruction(instruction),
+            Add | Subtract | Multiply | Divide | Modulo | Negate | Return => {
+                Self::simple_instruction(instruction)
+            }
         }
     }
 
@@ -119,6 +130,12 @@ impl OpCode {
         match self {
             Constant(_) => "OP_CONSTANT",
             LongConstant(_) => "OP_CONSTANT_LONG",
+            Add => "OP_ADD",
+            Subtract => "OP_SUBTRACT",
+            Multiply => "OP_MULTIPLY",
+            Divide => "OP_DIVIDE",
+            Modulo => "OP_MODULO",
+            Negate => "OP_NEGATE",
             Return => "OP_RETURN",
         }
     }
