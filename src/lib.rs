@@ -1,13 +1,20 @@
+#![feature(in_band_lifetimes)]
+
 extern crate failure;
 #[macro_use]
 extern crate failure_derive;
 
 mod chunk;
+mod compiler;
 pub mod error;
+mod location;
+mod scanner;
+mod utils;
 mod value;
 mod vm;
 
 use ansi_term::Color::{Blue, Cyan};
+use compiler::Compiler;
 use error::print_err;
 use failure::{Fallible, ResultExt};
 use rustyline::{config::Configurer, error::ReadlineError, Editor};
@@ -30,7 +37,9 @@ impl Lox {
     }
 
     pub fn run(&mut self, input: &str) -> Fallible<()> {
-        println!("Input: {}", input);
+        let chunk = Compiler::compile(input)?;
+        self.vm.interpret(chunk)?;
+
         Ok(())
     }
 
@@ -76,8 +85,13 @@ impl Lox {
         Ok(())
     }
 
-    fn run_prompt_line(&mut self, _input: &str) -> Fallible<()> {
+    fn run_prompt_line(&mut self, input: &str) -> Fallible<()> {
+        let chunk = Compiler::compile(input)?;
+        self.vm.interpret(chunk)?;
+
+        print!("=> ");
         print_value(&3.5);
+        println!();
         Ok(())
     }
 }

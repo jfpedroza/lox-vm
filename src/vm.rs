@@ -45,7 +45,11 @@ impl VM {
         self.chunk = chunk;
         self.cur_offset = 0;
 
-        self.run()
+        if self.chunk.code.is_empty() {
+            Ok(())
+        } else {
+            self.run()
+        }
     }
 
     fn run(&mut self) -> InterpretResult {
